@@ -18,9 +18,15 @@ $secretKey = $_ENV['PCARE_SECRET_KEY'];
 $userKey = $_ENV['PCARE_USER_KEY'];
 
 $base = $_ENV['PCARE_BASE_URL'];
-$endpoint = "/pcare-rest/dokter/0/100";
+$endpoint = "/dokter/0/100";
+
+// For Swoole, we need to extract host and construct full path
+$baseUrl = parse_url($base);
+$fullPath = ($baseUrl['path'] ?? '') . $endpoint;
 
 echo "Preparing BPJS request...\n";
+echo "Host: " . $baseUrl['host'] . "\n";
+echo "Full Path: " . $fullPath . "\n";
 
 // Computes the timestamp
 date_default_timezone_set('UTC');
@@ -42,11 +48,11 @@ $headers = [
 ];
 
 echo "Creating Swoole HTTP client...\n";
-$cli = new Client(parse_url($base, PHP_URL_HOST), parse_url($base, PHP_URL_PORT) ?: 443, true);
+$cli = new Client($baseUrl['host'], 443, true);
 $cli->setHeaders($headers);
 
 echo "Sending request to BPJS API...\n";
-$cli->get($endpoint);
+$cli->get($fullPath);
 
 echo 'Status Code: ' . $cli->statusCode . PHP_EOL;
 $rawBody = $cli->body;
